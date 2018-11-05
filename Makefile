@@ -1,8 +1,28 @@
-open_image: open_image.o util.o
-	gcc -o open_image open_image.o util.o
+CFLAGS  = -g -Wall -O2
+CC      = gcc
+LIBS    = 
+TARGET  = ./bin/bitplane
+INCLUDE = 
+SRCDIR  = ./src
+SRCS    = $(wildcard $(SRCDIR)/*.c) # ./src/*.c
+OBJDIR  = ./obj
+OBJS    = $(addprefix $(OBJDIR)/, $(notdir $(SRCS:.c=.o))) # obj/*.o
+DEPS    = $(OBJECTS:.o=.d)
 
-open_image.o: open_image.c
-	gcc -c open_image.c
+all: clean $(TARGET)
 
-util.o: util.c
-	gcc -c util.c
+-include $(DEPS)
+
+$(TARGET): $(OBJS)
+	$(CC) -o $@ $^ $(LIBS)
+
+$(OBJDIR)/%.o: $(SRCDIR)/%.c
+	-mkdir -p $(OBJDIR)
+	$(CC) $(CFLAGS) $(INCLUDE) -o $@ -c $<
+
+pngtest:
+	./bin/bitplane images/sample.png
+
+.PHONY: clean
+clean:
+	rm -f $(OBJS) $(DEPS) $(TARGET)
