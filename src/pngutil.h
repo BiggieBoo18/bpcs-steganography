@@ -8,6 +8,7 @@ typedef struct _PNGCOMMON {
 } PNGCOMMON, *PPNGCOMMON;
 
 typedef struct _PNGIHDR {
+  PNGCOMMON common;
   int width;
   int height;
   char bitdepth;
@@ -18,13 +19,22 @@ typedef struct _PNGIHDR {
   int crc;
 } PNGIHDR, *PPNGIHDR;
 
+typedef struct _PNGPLTE {
+  PNGCOMMON common;
+  char *data;
+  int crc;
+} PNGPLTE, *PPNGPLTE;
+
 typedef struct _PNGIEND {
-}
+  PNGCOMMON common;
+  int crc;
+} PNGIEND, *PPNGIEND;
 
 typedef struct _PNGFORMAT {
   char signature[8];
-  PNGCOMMON common;
   PNGIHDR ihdr;
+  PNGPLTE plte;
+  PNGIEND iend;
 } PNGFORMAT, *PPNGFORMAT;
 
 int png_parser(FILE *fp, PPNGFORMAT fmt);

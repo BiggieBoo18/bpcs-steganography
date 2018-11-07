@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "pngutil.h"
 #include "util.h"
@@ -16,21 +17,39 @@ int png_checksig(char *signature) {
 }
 
 int png_parser(FILE *fp, PPNGFORMAT fmt) {
+  int i = 0;
+  PNGCOMMON common;
   fread(&fmt->signature, 1, sizeof(fmt->signature), fp);
   if (png_checksig(fmt->signature)) {
       return (1);
   }
-  fread(&fmt->common.length, sizeof(fmt->common.length), 1, fp);
-  fread(&fmt->common.chunktype, sizeof(fmt->common.chunktype), 1, fp);
-  if (strcmp(fmt->ihdr.chunktype, "IHDR")==0) {
-    fread(&fmt->ihdr.width, sizeof(fmt->ihdr.width), 1, fp);
-    fread(&fmt->ihdr.height, sizeof(fmt->ihdr.height), 1, fp);
-    fread(&fmt->ihdr.bitdepth, sizeof(fmt->ihdr.bitdepth), 1, fp);
-    fread(&fmt->ihdr.colortype, sizeof(fmt->ihdr.colortype), 1, fp);
-    fread(&fmt->ihdr.compression, sizeof(fmt->ihdr.compression), 1, fp);
-    fread(&fmt->ihdr.filter, sizeof(fmt->ihdr.filter), 1, fp);
-    fread(&fmt->ihdr.interlace, sizeof(fmt->ihdr.interlace), 1, fp);
-    fread(&fmt->ihdr.crc, sizeof(fmt->ihdr.crc), 1, fp);
+  while (strcmp(common.chunktype, "IEND")!=0) {
+    fread(&common.length, sizeof(common.length), 1, fp);
+    fread(&common.chunktype, sizeof(common.chunktype), 1, fp);
+    if (strcmp(common.chunktype, "IHDR")==0) {
+      memcpy(&fmt->ihdr.common.length, &common.length, sizeof(common.length));
+      memcpy(fmt->ihdr.common.chunktype, common.chunktype, sizeof(common.chunktype));
+      fread(&fmt->ihdr.width, sizeof(fmt->ihdr.width), 1, fp);
+      fread(&fmt->ihdr.height, sizeof(fmt->ihdr.height), 1, fp);
+      fread(&fmt->ihdr.bitdepth, sizeof(fmt->ihdr.bitdepth), 1, fp);
+      fread(&fmt->ihdr.colortype, sizeof(fmt->ihdr.colortype), 1, fp);
+      fread(&fmt->ihdr.compression, sizeof(fmt->ihdr.compression), 1, fp);
+      fread(&fmt->ihdr.filter, sizeof(fmt->ihdr.filter), 1, fp);
+      fread(&fmt->ihdr.interlace, sizeof(fmt->ihdr.interlace), 1, fp);
+      fread(&fmt->ihdr.crc, sizeof(fmt->ihdr.crc), 1, fp);
+    } else if (strcmp(common.chunktype, "PLTE")==0) {
+      memcpy(&fmt->plte.common.length, &common.length, sizeof(common.length));
+      memcpy(fmt->plte.common.chunktype, common.chunktype, sizeof(common.chunktype));
+      fmt->plte.data = (char *)malloc(fmt->plte.common.length);
+      for (i=0; i<fmt->plte.common.length; i++) {
+          fread(&fmt->plte.data[i], sizeof(fmt->plte.data[i]), 1, fp);
+      }
+      fread(&fmt->ihdr.crc, sizeof(fmt->iend.crc), 1, fp);
+    } else if (strcmp(common.chunktype, "IEND")==0) {
+      memcpy(&fmt->iend.common.length, &common.length, sizeof(common.length));
+      memcpy(fmt->iend.common.chunktype, common.chunktype, sizeof(common.chunktype));
+      fread(&fmt->ihdr.crc, sizeof(fmt->iend.crc), 1, fp);
+    }
   }
   return (0);
 }
@@ -44,16 +63,16 @@ int png_viewer(PPNGFORMAT fmt) {
   }
   printf("\n");
   printf("  IHDR\n");
-  printf("    length:0x%X\n", le2be(fmt->common.length));
+  printf("    length:0x%X\n", le2be(fmt->ihdr.common.length));
   printf("    chunktype:");
-  for (i=0; fmt->common.chunktype[i]!='\0'; i++) {
-    printf("0x%02X ", fmt->ihdr.chunktype[i]&0x000000FF);
+  for (i=0; fmt->ihdr.common.chunktype[i]!='\0'; i++) {
+    printf("0x%02X ", fmt->ihdr.common.chunktype[i]&0x000000FF);
   }
   printf("\n");
   printf("    sizeof(char)=%ld\n", sizeof(char));
   printf("    sizeof(fmt->ihdr)=%ld\n", sizeof(fmt->ihdr));
-  printf("        length:%ld\n", sizeof(fmt->ihdr.length));
-  printf("        chunktype:%ld\n", sizeof(fmt->ihdr.chunktype));
+  printf("        length:%ld\n", sizeof(fmt->ihdr.common.length));
+  printf("        chunktype:%ld\n", sizeof(fmt->ihdr.common.chunktype));
   printf("        width:%ld\n", sizeof(fmt->ihdr.width));
   printf("        height:%ld\n", sizeof(fmt->ihdr.height));
   printf("        bitdepth:%ld\n", sizeof(fmt->ihdr.bitdepth));
