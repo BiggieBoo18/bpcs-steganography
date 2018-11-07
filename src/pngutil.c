@@ -51,6 +51,18 @@ int png_parser(FILE *fp, PPNGFORMAT fmt) {
           fread(&current_chunk->chunk.plte.data[i], sizeof(current_chunk->chunk.plte.data[i]), 1, fp);
       }
       fread(&current_chunk->chunk.plte.crc, sizeof(current_chunk->chunk.plte.crc), 1, fp);
+    } else if (strcmp(common.chunktype, "IDAT")==0) {
+      current_chunk->next = (PCHUNKS)malloc(sizeof(CHUNKS));
+      current_chunk       = current_chunk->next;
+      current_chunk->next = NULL;
+      current_chunk->chunk_name = "IDAT";
+      memcpy(&current_chunk->chunk.idat.common.length, &common.length, sizeof(common.length));
+      memcpy(current_chunk->chunk.idat.common.chunktype, common.chunktype, sizeof(common.chunktype));
+      current_chunk->chunk.idat.data = (char *)malloc(current_chunk->chunk.idat.common.length);
+      for (i=0; i<current_chunk->chunk.idat.common.length; i++) {
+          fread(&current_chunk->chunk.idat.data[i], sizeof(current_chunk->chunk.idat.data[i]), 1, fp);
+      }
+      fread(&current_chunk->chunk.idat.crc, sizeof(current_chunk->chunk.idat.crc), 1, fp);
     } else if (strcmp(common.chunktype, "IEND")==0) {
       memcpy(&fmt->iend.common.length, &common.length, sizeof(common.length));
       memcpy(fmt->iend.common.chunktype, common.chunktype, sizeof(common.chunktype));
