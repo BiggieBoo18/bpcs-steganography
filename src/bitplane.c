@@ -10,15 +10,18 @@ int main(int argc, char *argv[]) {
   // argument parse
   if (argc<2) {
     usage(*argv);
-    exit(EXIT_FAILURE);
+    return(EXIT_FAILURE);
   }
 
   if ((fp = fopen(argv[1], "rb"))==NULL) {
     perror("fopen");
-    exit(EXIT_FAILURE);
+    return(EXIT_FAILURE);
   }
 
-  png_parser(fp, &fmt);
+  if (png_parser(fp, &fmt)) {
+    fprintf(stderr, "[!] Unexpected image format!\n");
+    return(EXIT_FAILURE);
+  }
   png_viewer(&fmt);
 
   fclose(fp);

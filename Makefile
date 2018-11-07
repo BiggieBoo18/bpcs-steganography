@@ -1,7 +1,8 @@
 CFLAGS  = -g -Wall -O2
 CC      = gcc
-LIBS    = 
-TARGET  = ./bin/bitplane
+LIBS    =
+TARGETDIR = ./bin
+TARGET  = $(TARGETDIR)/bitplane
 INCLUDE = 
 SRCDIR  = ./src
 SRCS    = $(wildcard $(SRCDIR)/*.c) # ./src/*.c
@@ -14,6 +15,7 @@ all: clean $(TARGET)
 -include $(DEPS)
 
 $(TARGET): $(OBJS)
+	-mkdir -p $(TARGETDIR)
 	$(CC) -o $@ $^ $(LIBS)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
