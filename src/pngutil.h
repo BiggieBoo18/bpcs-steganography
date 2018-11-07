@@ -30,11 +30,21 @@ typedef struct _PNGIEND {
   int crc;
 } PNGIEND, *PPNGIEND;
 
-typedef struct _PNGFORMAT {
-  char signature[8];
-  PNGIHDR ihdr;
+typedef union _U_CHUNKS {
   PNGPLTE plte;
-  PNGIEND iend;
+} U_CHUNKS, *PU_CHUNKS;
+
+typedef struct _CHUNKS {
+  char *chunk_name;
+  U_CHUNKS chunk;
+  struct _CHUNKS *next;
+} CHUNKS, *PCHUNKS;
+
+typedef struct _PNGFORMAT {
+  char      signature[8];
+  PNGIHDR   ihdr;
+  PCHUNKS   chunks;
+  PNGIEND   iend;
 } PNGFORMAT, *PPNGFORMAT;
 
 int png_parser(FILE *fp, PPNGFORMAT fmt);

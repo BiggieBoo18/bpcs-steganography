@@ -18,6 +18,8 @@ int main(int argc, char *argv[]) {
     return(EXIT_FAILURE);
   }
 
+  fmt.chunks       = (PCHUNKS)malloc(sizeof(CHUNKS));
+  fmt.chunks->next = NULL;
   if (png_parser(fp, &fmt)) {
     fprintf(stderr, "[!] Unexpected image format!\n");
     return(EXIT_FAILURE);

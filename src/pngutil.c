@@ -17,16 +17,18 @@ int png_checksig(char *signature) {
 }
 
 int png_parser(FILE *fp, PPNGFORMAT fmt) {
-  int i = 0;
+  int       i = 0;
   PNGCOMMON common;
+  PCHUNKS   current_chunk = fmt->chunks;
+
   fread(&fmt->signature, 1, sizeof(fmt->signature), fp);
   if (png_checksig(fmt->signature)) {
       return (1);
   }
-  while (strcmp(common.chunktype, "IEND")!=0) {
-    fread(&common.length, sizeof(common.length), 1, fp);
-    fread(&common.chunktype, sizeof(common.chunktype), 1, fp);
-    if (strcmp(common.chunktype, "IHDR")==0) {
+  while (strcmp(common.chunktype, "IEND")!=0) { // break if IEND
+    fread(&common.length, sizeof(common.length), 1, fp); // COMMON
+    fread(&common.chunktype, sizeof(common.chunktype), 1, fp); // COMMON
+    if (strcmp(common.chunktype, "IHDR")==0) { // IHDR
       memcpy(&fmt->ihdr.common.length, &common.length, sizeof(common.length));
       memcpy(fmt->ihdr.common.chunktype, common.chunktype, sizeof(common.chunktype));
       fread(&fmt->ihdr.width, sizeof(fmt->ihdr.width), 1, fp);
@@ -38,13 +40,17 @@ int png_parser(FILE *fp, PPNGFORMAT fmt) {
       fread(&fmt->ihdr.interlace, sizeof(fmt->ihdr.interlace), 1, fp);
       fread(&fmt->ihdr.crc, sizeof(fmt->ihdr.crc), 1, fp);
     } else if (strcmp(common.chunktype, "PLTE")==0) {
-      memcpy(&fmt->plte.common.length, &common.length, sizeof(common.length));
-      memcpy(fmt->plte.common.chunktype, common.chunktype, sizeof(common.chunktype));
-      fmt->plte.data = (char *)malloc(fmt->plte.common.length);
-      for (i=0; i<fmt->plte.common.length; i++) {
-          fread(&fmt->plte.data[i], sizeof(fmt->plte.data[i]), 1, fp);
+      current_chunk->next = (PCHUNKS)malloc(sizeof(CHUNKS));
+      current_chunk       = current_chunk->next;
+      current_chunk->next = NULL;
+      current_chunk->chunk_name = "PLTE";
+      memcpy(&current_chunk->chunk.plte.common.length, &common.length, sizeof(common.length));
+      memcpy(current_chunk->chunk.plte.common.chunktype, common.chunktype, sizeof(common.chunktype));
+      current_chunk->chunk.plte.data = (char *)malloc(current_chunk->chunk.plte.common.length);
+      for (i=0; i<current_chunk->chunk.plte.common.length; i++) {
+          fread(&current_chunk->chunk.plte.data[i], sizeof(current_chunk->chunk.plte.data[i]), 1, fp);
       }
-      fread(&fmt->ihdr.crc, sizeof(fmt->iend.crc), 1, fp);
+      fread(&current_chunk->chunk.plte.crc, sizeof(current_chunk->chunk.plte.crc), 1, fp);
     } else if (strcmp(common.chunktype, "IEND")==0) {
       memcpy(&fmt->iend.common.length, &common.length, sizeof(common.length));
       memcpy(fmt->iend.common.chunktype, common.chunktype, sizeof(common.chunktype));
