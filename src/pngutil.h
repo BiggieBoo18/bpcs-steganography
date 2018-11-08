@@ -3,20 +3,20 @@
 
 
 typedef struct _PNGCOMMON {
-  int length;
+  int  length;
   char chunktype[4];
 } PNGCOMMON, *PPNGCOMMON;
 
 typedef struct _PNGIHDR {
   PNGCOMMON common;
-  int width;
-  int height;
-  char bitdepth;
-  char colortype;
-  char compression;
-  char filter;
-  char interlace;
-  int crc;
+  int       width;
+  int       height;
+  char      bitdepth;
+  char      colortype;
+  char      compression;
+  char      filter;
+  char      interlace;
+  int       crc;
 } PNGIHDR, *PPNGIHDR;
 
 typedef struct _PNGPLTE {
@@ -31,26 +31,33 @@ typedef struct _PNGGAMA {
   int crc;
 } PNGGAMA, *PPNGGAMA;
 
+typedef struct _PNGTRNS {
+  PNGCOMMON common;
+  char     *data;
+  int       crc;
+} PNGTRNS, *PPNGTRNS;
+
 typedef struct _PNGIDAT {
   PNGCOMMON common;
-  char *data;
-  int crc;
+  char     *data;
+  int       crc;
 } PNGIDAT, *PPNGIDAT;
 
 typedef struct _PNGIEND {
   PNGCOMMON common;
-  int crc;
+  int       crc;
 } PNGIEND, *PPNGIEND;
 
 typedef union _U_CHUNKS {
   PNGPLTE plte;
   PNGGAMA gama;
+  PNGTRNS trns;
   PNGIDAT idat;
 } U_CHUNKS, *PU_CHUNKS;
 
 typedef struct _CHUNKS {
-  char *chunk_name;
-  U_CHUNKS chunk;
+  char           *chunk_name;
+  U_CHUNKS        chunk;
   struct _CHUNKS *next;
 } CHUNKS, *PCHUNKS;
 
