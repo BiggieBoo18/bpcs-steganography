@@ -51,6 +51,15 @@ int png_parser(FILE *fp, PPNGFORMAT fmt) {
           fread(&current_chunk->chunk.plte.data[i], sizeof(current_chunk->chunk.plte.data[i]), 1, fp);
       }
       fread(&current_chunk->chunk.plte.crc, sizeof(current_chunk->chunk.plte.crc), 1, fp);
+    } else if (strcmp(common.chunktype, "gAMA")==0) {
+      current_chunk->next = (PCHUNKS)malloc(sizeof(CHUNKS));
+      current_chunk       = current_chunk->next;
+      current_chunk->next = NULL;
+      current_chunk->chunk_name = "GAMA";
+      memcpy(&current_chunk->chunk.gama.common.length, &common.length, sizeof(common.length));
+      memcpy(current_chunk->chunk.gama.common.chunktype, common.chunktype, sizeof(common.chunktype));
+      fread(&current_chunk->chunk.gama.data, sizeof(current_chunk->chunk.gama.data), 1, fp);
+      fread(&current_chunk->chunk.gama.crc, sizeof(current_chunk->chunk.gama.crc), 1, fp);
     } else if (strcmp(common.chunktype, "IDAT")==0) {
       current_chunk->next = (PCHUNKS)malloc(sizeof(CHUNKS));
       current_chunk       = current_chunk->next;
@@ -67,6 +76,9 @@ int png_parser(FILE *fp, PPNGFORMAT fmt) {
       memcpy(&fmt->iend.common.length, &common.length, sizeof(common.length));
       memcpy(fmt->iend.common.chunktype, common.chunktype, sizeof(common.chunktype));
       fread(&fmt->ihdr.crc, sizeof(fmt->iend.crc), 1, fp);
+    } else {
+      printf("%s\n", common.chunktype);
+      return (0);
     }
   }
   return (0);
@@ -87,18 +99,6 @@ int png_viewer(PPNGFORMAT fmt) {
     printf("0x%02X ", fmt->ihdr.common.chunktype[i]&0x000000FF);
   }
   printf("\n");
-  printf("    sizeof(char)=%ld\n", sizeof(char));
-  printf("    sizeof(fmt->ihdr)=%ld\n", sizeof(fmt->ihdr));
-  printf("        length:%ld\n", sizeof(fmt->ihdr.common.length));
-  printf("        chunktype:%ld\n", sizeof(fmt->ihdr.common.chunktype));
-  printf("        width:%ld\n", sizeof(fmt->ihdr.width));
-  printf("        height:%ld\n", sizeof(fmt->ihdr.height));
-  printf("        bitdepth:%ld\n", sizeof(fmt->ihdr.bitdepth));
-  printf("        colortype:%ld\n", sizeof(fmt->ihdr.colortype));
-  printf("        compression:%ld\n", sizeof(fmt->ihdr.compression));
-  printf("        filter:%ld\n", sizeof(fmt->ihdr.filter));
-  printf("        interlace:%ld\n", sizeof(fmt->ihdr.interlace));
-  printf("        crc:%ld\n", sizeof(fmt->ihdr.crc));
   printf("    width:0x%08X\n", le2be(fmt->ihdr.width));
   printf("    height:0x%08X\n", le2be(fmt->ihdr.height));
   printf("    bitdepth:0x%X\n", fmt->ihdr.bitdepth);
@@ -107,6 +107,15 @@ int png_viewer(PPNGFORMAT fmt) {
   printf("    filter:0x%X\n", fmt->ihdr.filter);
   printf("    interlace:0x%X\n", fmt->ihdr.interlace);
   printf("    crc:0x%08X\n", fmt->ihdr.crc);
-  /* printf("    crc:0x%lX\n", fmt->ihdr.crc); */
+  printf("  gAMA\n");
+  /* printf("    length:0x%X\n", le2be(fmt->chunks[1].chunk.gama.common.length)); */
+  printf("    length:0x%X\n", le2be(fmt->chunks->next->chunk.gama.common.length));
+  printf("    chunktype:");
+  for (i=0; fmt->chunks->next->chunk.gama.common.chunktype[i]!='\0'; i++) {
+    printf("0x%02X ", fmt->chunks->next->chunk.gama.common.chunktype[i]&0x000000FF);
+  }
+  printf("\n");
+  printf("    data:0x%X\n", le2be(fmt->chunks->next->chunk.gama.data));
+  printf("    crc:0x%08X\n", fmt->chunks->next->chunk.gama.crc);
   return (0);
 }

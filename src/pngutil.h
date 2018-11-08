@@ -25,6 +25,12 @@ typedef struct _PNGPLTE {
   int crc;
 } PNGPLTE, *PPNGPLTE;
 
+typedef struct _PNGGAMA {
+  PNGCOMMON common;
+  int data;
+  int crc;
+} PNGGAMA, *PPNGGAMA;
+
 typedef struct _PNGIDAT {
   PNGCOMMON common;
   char *data;
@@ -38,6 +44,7 @@ typedef struct _PNGIEND {
 
 typedef union _U_CHUNKS {
   PNGPLTE plte;
+  PNGGAMA gama;
   PNGIDAT idat;
 } U_CHUNKS, *PU_CHUNKS;
 
