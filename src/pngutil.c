@@ -7,8 +7,8 @@
 int png_checksig(char *signature) {
     int ret = 0; // true if ret==0, false if ret==1
     int i   = 0;
-    char png_signature[9] = {0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, '\0'};
-    for (i=0; png_signature[i]!='\0'; i++) {
+    char png_signature[8] = {0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
+    for (i=0; i<sizeof(png_signature); i++) {
         if (png_signature[i]!=signature[i]) {
             ret = 1;
         }
@@ -23,11 +23,12 @@ int png_parser(FILE *fp, PPNGFORMAT fmt) {
 
   fread(&fmt->signature, 1, sizeof(fmt->signature), fp);
   if (png_checksig(fmt->signature)) {
-      return (1);
+    return (1);
   }
   while (strcmp(common.chunktype, "IEND")!=0) { // break if IEND
     fread(&common.length, sizeof(common.length), 1, fp); // COMMON
     fread(&common.chunktype, sizeof(common.chunktype), 1, fp); // COMMON
+    common.chunktype[sizeof(common.chunktype)] = '\0';
     if (strcmp(common.chunktype, "IHDR")==0) { // IHDR
       memcpy(&fmt->ihdr.common.length, &common.length, sizeof(common.length));
       memcpy(fmt->ihdr.common.chunktype, common.chunktype, sizeof(common.chunktype));
@@ -100,14 +101,14 @@ int png_viewer(PPNGFORMAT fmt) {
   int  i=0;
   printf("PNG Format\n");
   printf("SIGNATURE:");
-  for (i=0; fmt->signature[i]!='\0'; i++) {
+  for (i=0; i<sizeof(fmt->signature); i++) {
     printf("0x%02X ", fmt->signature[i]&0x000000FF);
   }
   printf("\n");
   printf("  IHDR\n");
   printf("    length:0x%X\n", le2be(fmt->ihdr.common.length));
   printf("    chunktype:");
-  for (i=0; fmt->ihdr.common.chunktype[i]!='\0'; i++) {
+  for (i=0; i<sizeof(fmt->ihdr.common.chunktype); i++) {
     printf("0x%02X ", fmt->ihdr.common.chunktype[i]&0x000000FF);
   }
   printf("\n");
@@ -123,11 +124,11 @@ int png_viewer(PPNGFORMAT fmt) {
   /* printf("    length:0x%X\n", le2be(fmt->chunks[1].chunk.gama.common.length)); */
   printf("    length:0x%X\n", le2be(fmt->chunks->next->chunk.gama.common.length));
   printf("    chunktype:");
-  for (i=0; fmt->chunks->next->chunk.gama.common.chunktype[i]!='\0'; i++) {
+  for (i=0; i<sizeof(fmt->chunks->next->chunk.gama.common.chunktype); i++) {
     printf("0x%02X ", fmt->chunks->next->chunk.gama.common.chunktype[i]&0x000000FF);
   }
   printf("\n");
   printf("    data:0x%X\n", le2be(fmt->chunks->next->chunk.gama.data));
-  printf("    crc:0x%08X\n", fmt->chunks->next->chunk.gama.crc);
+  printf("    crc:0x%08X\n", le2be(fmt->chunks->next->chunk.gama.crc));
   return (0);
 }
