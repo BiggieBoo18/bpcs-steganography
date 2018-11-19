@@ -2,6 +2,7 @@
 #define HUTIL
 
 void usage(char *argv);
-int le2be(int src);
+unsigned short swap16(unsigned short value);
+unsigned int swap32(unsigned int value);
 
 #endif

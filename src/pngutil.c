@@ -28,7 +28,7 @@ int png_parser(FILE *fp, PPNGFORMAT fmt) {
   while (strcmp(common.chunktype, "IEND")!=0) { // break if IEND
     fread(&common.length, sizeof(common.length), 1, fp); // COMMON
     fread(&common.chunktype, sizeof(common.chunktype), 1, fp); // COMMON
-    common.chunktype[sizeof(common.chunktype)] = '\0';
+    /* common.chunktype[sizeof(common.chunktype)] = '\0'; */
     if (strcmp(common.chunktype, "IHDR")==0) { // IHDR
       memcpy(&fmt->ihdr.common.length, &common.length, sizeof(common.length));
       memcpy(fmt->ihdr.common.chunktype, common.chunktype, sizeof(common.chunktype));
@@ -61,7 +61,18 @@ int png_parser(FILE *fp, PPNGFORMAT fmt) {
       memcpy(current_chunk->chunk.gama.common.chunktype, common.chunktype, sizeof(common.chunktype));
       fread(&current_chunk->chunk.gama.data, sizeof(current_chunk->chunk.gama.data), 1, fp);
       fread(&current_chunk->chunk.gama.crc, sizeof(current_chunk->chunk.gama.crc), 1, fp);
-    } else if (strcmp(common.chunktype, "tRNS")==0) { // tRNS
+    } else if (strcmp(common.chunktype, "cHRM")==0) { // cHRM
+      current_chunk->next = (PCHUNKS)malloc(sizeof(CHUNKS));
+      current_chunk       = current_chunk->next;
+      current_chunk->next = NULL;
+      current_chunk->chunk_name = "cHRM";
+      memcpy(&current_chunk->chunk.chrm.common.length, &common.length, sizeof(common.length));
+      memcpy(current_chunk->chunk.chrm.common.chunktype, common.chunktype, sizeof(common.chunktype));
+      for (i=0; i<current_chunk->chunk.chrm.common.length; i++) {
+        fread(&current_chunk->chunk.chrm.data[i], sizeof(current_chunk->chunk.chrm.data[i]), 1, fp);
+      }
+      fread(&current_chunk->chunk.chrm.crc, sizeof(current_chunk->chunk.chrm.crc), 1, fp);
+    }  else if (strcmp(common.chunktype, "tRNS")==0) { // tRNS
       current_chunk->next = (PCHUNKS)malloc(sizeof(CHUNKS));
       current_chunk       = current_chunk->next;
       current_chunk->next = NULL;
@@ -106,14 +117,14 @@ int png_viewer(PPNGFORMAT fmt) {
   }
   printf("\n");
   printf("  IHDR\n");
-  printf("    length:0x%X\n", le2be(fmt->ihdr.common.length));
+  printf("    length:0x%X\n", swap32(fmt->ihdr.common.length));
   printf("    chunktype:");
   for (i=0; i<sizeof(fmt->ihdr.common.chunktype); i++) {
     printf("0x%02X ", fmt->ihdr.common.chunktype[i]&0x000000FF);
   }
   printf("\n");
-  printf("    width:0x%08X\n", le2be(fmt->ihdr.width));
-  printf("    height:0x%08X\n", le2be(fmt->ihdr.height));
+  printf("    width:0x%08X\n", swap32(fmt->ihdr.width));
+  printf("    height:0x%08X\n", swap32(fmt->ihdr.height));
   printf("    bitdepth:0x%X\n", fmt->ihdr.bitdepth);
   printf("    colortype:0x%X\n", fmt->ihdr.colortype);
   printf("    compression:0x%X\n", fmt->ihdr.compression);
@@ -121,14 +132,13 @@ int png_viewer(PPNGFORMAT fmt) {
   printf("    interlace:0x%X\n", fmt->ihdr.interlace);
   printf("    crc:0x%08X\n", fmt->ihdr.crc);
   printf("  gAMA\n");
-  /* printf("    length:0x%X\n", le2be(fmt->chunks[1].chunk.gama.common.length)); */
-  printf("    length:0x%X\n", le2be(fmt->chunks->next->chunk.gama.common.length));
+  printf("    length:0x%X\n", swap32(fmt->chunks->next->chunk.gama.common.length));
   printf("    chunktype:");
   for (i=0; i<sizeof(fmt->chunks->next->chunk.gama.common.chunktype); i++) {
     printf("0x%02X ", fmt->chunks->next->chunk.gama.common.chunktype[i]&0x000000FF);
   }
   printf("\n");
-  printf("    data:0x%X\n", le2be(fmt->chunks->next->chunk.gama.data));
-  printf("    crc:0x%08X\n", le2be(fmt->chunks->next->chunk.gama.crc));
+  printf("    data:0x%X\n", swap32(fmt->chunks->next->chunk.gama.data));
+  printf("    crc:0x%08X\n", swap32(fmt->chunks->next->chunk.gama.crc));
   return (0);
 }

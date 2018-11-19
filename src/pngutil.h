@@ -31,6 +31,12 @@ typedef struct _PNGGAMA {
   int crc;
 } PNGGAMA, *PPNGGAMA;
 
+typedef struct _PNGCHRM {
+  PNGCOMMON common;
+  int data[8];
+  int crc;
+} PNGCHRM, *PPNGCHRM;
+
 typedef struct _PNGTRNS {
   PNGCOMMON common;
   char     *data;
@@ -51,6 +57,7 @@ typedef struct _PNGIEND {
 typedef union _U_CHUNKS {
   PNGPLTE plte;
   PNGGAMA gama;
+  PNGCHRM chrm;
   PNGTRNS trns;
   PNGIDAT idat;
 } U_CHUNKS, *PU_CHUNKS;
