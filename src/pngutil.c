@@ -28,19 +28,22 @@ int png_parser(FILE *fp, PPNGFORMAT fmt) {
   while (strcmp(common.chunktype, "IEND")!=0) { // break if IEND
     fread(&common.length, sizeof(common.length), 1, fp); // COMMON
     fread(&common.chunktype, sizeof(common.chunktype), 1, fp); // COMMON
-    /* common.chunktype[sizeof(common.chunktype)] = '\0'; */
+    common.length = swap32(common.length); // swap bytes
     if (strcmp(common.chunktype, "IHDR")==0) { // IHDR
+      puts("here1");
       memcpy(&fmt->ihdr.common.length, &common.length, sizeof(common.length));
       memcpy(fmt->ihdr.common.chunktype, common.chunktype, sizeof(common.chunktype));
-      fread(&fmt->ihdr.width, sizeof(fmt->ihdr.width), 1, fp);
-      fread(&fmt->ihdr.height, sizeof(fmt->ihdr.height), 1, fp);
-      fread(&fmt->ihdr.bitdepth, sizeof(fmt->ihdr.bitdepth), 1, fp);
-      fread(&fmt->ihdr.colortype, sizeof(fmt->ihdr.colortype), 1, fp);
-      fread(&fmt->ihdr.compression, sizeof(fmt->ihdr.compression), 1, fp);
-      fread(&fmt->ihdr.filter, sizeof(fmt->ihdr.filter), 1, fp);
-      fread(&fmt->ihdr.interlace, sizeof(fmt->ihdr.interlace), 1, fp);
-      fread(&fmt->ihdr.crc, sizeof(fmt->ihdr.crc), 1, fp);
+      fread(&fmt->ihdr.common+1, fmt->ihdr.common.length+sizeof(fmt->ihdr.crc), 1, fp); // data+crc
+      /* fread(&fmt->ihdr.width, sizeof(fmt->ihdr.width), 1, fp); */
+      /* fread(&fmt->ihdr.height, sizeof(fmt->ihdr.height), 1, fp); */
+      /* fread(&fmt->ihdr.bitdepth, sizeof(fmt->ihdr.bitdepth), 1, fp); */
+      /* fread(&fmt->ihdr.colortype, sizeof(fmt->ihdr.colortype), 1, fp); */
+      /* fread(&fmt->ihdr.compression, sizeof(fmt->ihdr.compression), 1, fp); */
+      /* fread(&fmt->ihdr.filter, sizeof(fmt->ihdr.filter), 1, fp); */
+      /* fread(&fmt->ihdr.interlace, sizeof(fmt->ihdr.interlace), 1, fp); */
+      /* fread(&fmt->ihdr.crc, sizeof(fmt->ihdr.crc), 1, fp); */
     } else if (strcmp(common.chunktype, "PLTE")==0) { // PLTE
+      puts("here2");
       current_chunk->next = (PCHUNKS)malloc(sizeof(CHUNKS));
       current_chunk       = current_chunk->next;
       current_chunk->next = NULL;
@@ -53,6 +56,7 @@ int png_parser(FILE *fp, PPNGFORMAT fmt) {
       }
       fread(&current_chunk->chunk.plte.crc, sizeof(current_chunk->chunk.plte.crc), 1, fp);
     } else if (strcmp(common.chunktype, "gAMA")==0) { // gAMA
+      puts("here3");
       current_chunk->next = (PCHUNKS)malloc(sizeof(CHUNKS));
       current_chunk       = current_chunk->next;
       current_chunk->next = NULL;
@@ -62,6 +66,7 @@ int png_parser(FILE *fp, PPNGFORMAT fmt) {
       fread(&current_chunk->chunk.gama.data, sizeof(current_chunk->chunk.gama.data), 1, fp);
       fread(&current_chunk->chunk.gama.crc, sizeof(current_chunk->chunk.gama.crc), 1, fp);
     } else if (strcmp(common.chunktype, "cHRM")==0) { // cHRM
+      puts("here4");
       current_chunk->next = (PCHUNKS)malloc(sizeof(CHUNKS));
       current_chunk       = current_chunk->next;
       current_chunk->next = NULL;
@@ -73,6 +78,7 @@ int png_parser(FILE *fp, PPNGFORMAT fmt) {
       }
       fread(&current_chunk->chunk.chrm.crc, sizeof(current_chunk->chunk.chrm.crc), 1, fp);
     }  else if (strcmp(common.chunktype, "tRNS")==0) { // tRNS
+      puts("here5");
       current_chunk->next = (PCHUNKS)malloc(sizeof(CHUNKS));
       current_chunk       = current_chunk->next;
       current_chunk->next = NULL;
@@ -85,6 +91,7 @@ int png_parser(FILE *fp, PPNGFORMAT fmt) {
       }
       fread(&current_chunk->chunk.trns.crc, sizeof(current_chunk->chunk.trns.crc), 1, fp);
     } else if (strcmp(common.chunktype, "IDAT")==0) { // IDAT
+      puts("here6");
       current_chunk->next = (PCHUNKS)malloc(sizeof(CHUNKS));
       current_chunk       = current_chunk->next;
       current_chunk->next = NULL;
@@ -97,12 +104,14 @@ int png_parser(FILE *fp, PPNGFORMAT fmt) {
       }
       fread(&current_chunk->chunk.idat.crc, sizeof(current_chunk->chunk.idat.crc), 1, fp);
     } else if (strcmp(common.chunktype, "IEND")==0) { // IEND
+      puts("here7");
       memcpy(&fmt->iend.common.length, &common.length, sizeof(common.length));
       memcpy(fmt->iend.common.chunktype, common.chunktype, sizeof(common.chunktype));
-      fread(&fmt->ihdr.crc, sizeof(fmt->iend.crc), 1, fp);
+      fread(&fmt->iend.crc, sizeof(fmt->iend.crc), 1, fp);
     } else {
+      printf("%p\n", current_chunk->next);
       printf("%s\n", common.chunktype);
-      return (0);
+      return (1);
     }
   }
   return (0);
@@ -110,6 +119,7 @@ int png_parser(FILE *fp, PPNGFORMAT fmt) {
 
 int png_viewer(PPNGFORMAT fmt) {
   int  i=0;
+  PCHUNKS   current_chunk = fmt->chunks;
   printf("PNG Format\n");
   printf("SIGNATURE:");
   for (i=0; i<sizeof(fmt->signature); i++) {
@@ -117,7 +127,7 @@ int png_viewer(PPNGFORMAT fmt) {
   }
   printf("\n");
   printf("  IHDR\n");
-  printf("    length:0x%X\n", swap32(fmt->ihdr.common.length));
+  printf("    length:0x%X\n", fmt->ihdr.common.length);
   printf("    chunktype:");
   for (i=0; i<sizeof(fmt->ihdr.common.chunktype); i++) {
     printf("0x%02X ", fmt->ihdr.common.chunktype[i]&0x000000FF);
@@ -131,14 +141,26 @@ int png_viewer(PPNGFORMAT fmt) {
   printf("    filter:0x%X\n", fmt->ihdr.filter);
   printf("    interlace:0x%X\n", fmt->ihdr.interlace);
   printf("    crc:0x%08X\n", fmt->ihdr.crc);
-  printf("  gAMA\n");
-  printf("    length:0x%X\n", swap32(fmt->chunks->next->chunk.gama.common.length));
-  printf("    chunktype:");
-  for (i=0; i<sizeof(fmt->chunks->next->chunk.gama.common.chunktype); i++) {
-    printf("0x%02X ", fmt->chunks->next->chunk.gama.common.chunktype[i]&0x000000FF);
-  }
-  printf("\n");
-  printf("    data:0x%X\n", swap32(fmt->chunks->next->chunk.gama.data));
-  printf("    crc:0x%08X\n", swap32(fmt->chunks->next->chunk.gama.crc));
+  current_chunk = fmt->chunks->next;
+  do {
+    if (current_chunk==0x0) {
+      puts("here");
+    } else {
+      puts("not");
+    }
+    printf("current_chunk=%p\n", current_chunk);
+    /* printf(", %s\n", current_chunk->chunk_name); */
+    if (strcmp(current_chunk->chunk_name, "gAMA")==0) {
+      printf("  gAMA\n");
+      printf("    length:0x%X\n", fmt->chunks->next->chunk.gama.common.length);
+      printf("    chunktype:");
+      for (i=0; i<sizeof(current_chunk->chunk.gama.common.chunktype); i++) {
+        printf("0x%02X ", current_chunk->chunk.gama.common.chunktype[i]&0x000000FF);
+      }
+      printf("\n");
+      printf("    data:0x%X\n", swap32(current_chunk->chunk.gama.data));
+      printf("    crc:0x%08X\n", swap32(current_chunk->chunk.gama.crc));
+    }
+  } while ((current_chunk = current_chunk->next));
   return (0);
 }
