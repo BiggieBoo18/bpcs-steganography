@@ -1,12 +1,12 @@
 #ifndef HPNGUTIL
 #define HPNGUTIL
+#pragma pack(1)
 
 typedef struct _PNGCOMMON {
   int  length;
   char chunktype[4];
 } PNGCOMMON, *PPNGCOMMON;
 
-#pragma pack(1)
 typedef struct _PNGIHDR {
   PNGCOMMON common;
   int       width;
@@ -18,7 +18,6 @@ typedef struct _PNGIHDR {
   char      interlace;
   int       crc;
 } PNGIHDR, *PPNGIHDR;
-#pragma pack()
 
 typedef struct _PNGPLTE {
   PNGCOMMON common;
@@ -34,7 +33,7 @@ typedef struct _PNGGAMA {
 
 typedef struct _PNGCHRM {
   PNGCOMMON common;
-  int data[32];
+  int data[8];
   int crc;
 } PNGCHRM, *PPNGCHRM;
 
@@ -43,6 +42,18 @@ typedef struct _PNGTRNS {
   char     *data;
   int       crc;
 } PNGTRNS, *PPNGTRNS;
+
+typedef struct _PNGSRGB {
+  PNGCOMMON common;
+  char      data;
+  int       crc;
+} PNGSRGB, *PPNGSRGB;
+
+typedef struct _PNGICCP {
+  PNGCOMMON common;
+  char     *data;
+  int       crc;
+} PNGICCP, *PPNGICCP;
 
 typedef struct _PNGIDAT {
   PNGCOMMON common;
@@ -60,6 +71,8 @@ typedef union _U_CHUNKS {
   PNGGAMA gama;
   PNGCHRM chrm;
   PNGTRNS trns;
+  PNGSRGB srgb;
+  PNGICCP iccp;
   PNGIDAT idat;
 } U_CHUNKS, *PU_CHUNKS;
 
