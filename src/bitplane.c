@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
   fmt.chunks       = (PCHUNKS)malloc(sizeof(CHUNKS));
   fmt.chunks->next = NULL;
   if (png_parser(fp, &fmt)) {
-    fprintf(stderr, "[!] Unexpected image format!\n");
+    fprintf(stderr, "[!] Unexpected image format or other errors!\n");
     return(EXIT_FAILURE);
   }
   png_viewer(&fmt);
