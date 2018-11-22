@@ -210,7 +210,9 @@ int png_parser(FILE *fp, PPNGFORMAT fmt) {
       current_chunk->chunk_name = "pHYs";
       memcpy(&current_chunk->chunk.phys.common.length, &common.length, sizeof(common.length));
       memcpy(current_chunk->chunk.phys.common.chunktype, common.chunktype, sizeof(common.chunktype));
-      fread(current_chunk->chunk.phys.data, current_chunk->chunk.phys.common.length, current_chunk->chunk.phys.common.length, fp);
+      fread(current_chunk->chunk.phys.data, current_chunk->chunk.phys.common.length, 1, fp);
+      printf("%X\n", ftell(fp));
+      exit(1);
       fread(&current_chunk->chunk.phys.crc, sizeof(current_chunk->chunk.phys.crc), 1, fp);
     } else if (strcmp(common.chunktype, "IDAT")==0) { // IDAT
       if ((current_chunk->next = (PCHUNKS)malloc(sizeof(CHUNKS)))==NULL) {
@@ -310,6 +312,7 @@ int png_viewer(PPNGFORMAT fmt) {
   printf("    crc:0x%08X\n", fmt->ihdr.crc);
   current_chunk = fmt->chunks->next;
   do {
+    /* printf("%p\n", current_chunk); */
     /* printf("%s\n", current_chunk->chunk_name); */
     if (strcmp(current_chunk->chunk_name, "PLTE")==0) {
       printf("  PLTE\n");
