@@ -17,7 +17,6 @@ int png_checksig(char *signature) {
 }
 
 int png_parser(FILE *fp, PPNGFORMAT fmt) {
-  int       i = 0;
   PNGCOMMON common;
   PCHUNKS   current_chunk = fmt->chunks;
 
@@ -57,9 +56,7 @@ int png_parser(FILE *fp, PPNGFORMAT fmt) {
         perror("");
         return (1);
       }
-      for (i=0; i<current_chunk->chunk.plte.common.length; i++) {
-        fread(&current_chunk->chunk.plte.data[i], sizeof(current_chunk->chunk.plte.data[i]), 1, fp);
-      }
+      fread(current_chunk->chunk.plte.data, current_chunk->chunk.plte.common.length, 1, fp);
       fread(&current_chunk->chunk.plte.crc, sizeof(current_chunk->chunk.plte.crc), 1, fp);
     } else if (strcmp(common.chunktype, "gAMA")==0) { // gAMA
       if ((current_chunk->next = (PCHUNKS)malloc(sizeof(CHUNKS)))==NULL) {
@@ -155,6 +152,66 @@ int png_parser(FILE *fp, PPNGFORMAT fmt) {
       }
       fread(current_chunk->chunk.bkgd.data, current_chunk->chunk.bkgd.common.length, 1, fp);
       fread(&current_chunk->chunk.bkgd.crc, sizeof(current_chunk->chunk.bkgd.crc), 1, fp);
+    } else if (strcmp(common.chunktype, "sBIT")==0) { // sBIT
+      if ((current_chunk->next = (PCHUNKS)malloc(sizeof(CHUNKS)))==NULL) {
+        perror("");
+        return (1);
+      }
+      current_chunk       = current_chunk->next;
+      current_chunk->next = NULL;
+      current_chunk->chunk_name = "sBIT";
+      memcpy(&current_chunk->chunk.sbit.common.length, &common.length, sizeof(common.length));
+      memcpy(current_chunk->chunk.sbit.common.chunktype, common.chunktype, sizeof(common.chunktype));
+      if ((current_chunk->chunk.sbit.data = (char *)malloc(current_chunk->chunk.sbit.common.length))==NULL) {
+        perror("");
+        return (1);
+      }
+      fread(current_chunk->chunk.sbit.data, current_chunk->chunk.sbit.common.length, 1, fp);
+      fread(&current_chunk->chunk.sbit.crc, sizeof(current_chunk->chunk.sbit.crc), 1, fp);
+    } else if (strcmp(common.chunktype, "sPLT")==0) { // sPLT
+      if ((current_chunk->next = (PCHUNKS)malloc(sizeof(CHUNKS)))==NULL) {
+        perror("");
+        return (1);
+      }
+      current_chunk       = current_chunk->next;
+      current_chunk->next = NULL;
+      current_chunk->chunk_name = "sPLT";
+      memcpy(&current_chunk->chunk.splt.common.length, &common.length, sizeof(common.length));
+      memcpy(current_chunk->chunk.splt.common.chunktype, common.chunktype, sizeof(common.chunktype));
+      if ((current_chunk->chunk.splt.data = (char *)malloc(current_chunk->chunk.splt.common.length))==NULL) {
+        perror("");
+        return (1);
+      }
+      fread(current_chunk->chunk.splt.data, current_chunk->chunk.splt.common.length, 1, fp);
+      fread(&current_chunk->chunk.splt.crc, sizeof(current_chunk->chunk.splt.crc), 1, fp);
+    } else if (strcmp(common.chunktype, "hIST")==0) { // hIST
+      if ((current_chunk->next = (PCHUNKS)malloc(sizeof(CHUNKS)))==NULL) {
+        perror("");
+        return (1);
+      }
+      current_chunk       = current_chunk->next;
+      current_chunk->next = NULL;
+      current_chunk->chunk_name = "hIST";
+      memcpy(&current_chunk->chunk.hist.common.length, &common.length, sizeof(common.length));
+      memcpy(current_chunk->chunk.hist.common.chunktype, common.chunktype, sizeof(common.chunktype));
+      if ((current_chunk->chunk.hist.data = (char *)malloc(current_chunk->chunk.hist.common.length))==NULL) {
+        perror("");
+        return (1);
+      }
+      fread(current_chunk->chunk.hist.data, current_chunk->chunk.hist.common.length, 1, fp);
+      fread(&current_chunk->chunk.hist.crc, sizeof(current_chunk->chunk.hist.crc), 1, fp);
+    } else if (strcmp(common.chunktype, "pHYs")==0) { // pHYs
+      if ((current_chunk->next = (PCHUNKS)malloc(sizeof(CHUNKS)))==NULL) {
+        perror("");
+        return (1);
+      }
+      current_chunk       = current_chunk->next;
+      current_chunk->next = NULL;
+      current_chunk->chunk_name = "pHYs";
+      memcpy(&current_chunk->chunk.phys.common.length, &common.length, sizeof(common.length));
+      memcpy(current_chunk->chunk.phys.common.chunktype, common.chunktype, sizeof(common.chunktype));
+      fread(current_chunk->chunk.phys.data, current_chunk->chunk.phys.common.length, current_chunk->chunk.phys.common.length, fp);
+      fread(&current_chunk->chunk.phys.crc, sizeof(current_chunk->chunk.phys.crc), 1, fp);
     } else if (strcmp(common.chunktype, "IDAT")==0) { // IDAT
       if ((current_chunk->next = (PCHUNKS)malloc(sizeof(CHUNKS)))==NULL) {
         perror("");
@@ -203,6 +260,18 @@ int png_parser(FILE *fp, PPNGFORMAT fmt) {
       }
       fread(current_chunk->chunk.itxt.data, sizeof(current_chunk->chunk.itxt.data), current_chunk->chunk.itxt.common.length, fp);
       fread(&current_chunk->chunk.itxt.crc, sizeof(current_chunk->chunk.itxt.crc), 1, fp);
+    } else if (strcmp(common.chunktype, "tIME")==0) { // tIME
+      if ((current_chunk->next = (PCHUNKS)malloc(sizeof(CHUNKS)))==NULL) {
+        perror("");
+        return (1);
+      }
+      current_chunk       = current_chunk->next;
+      current_chunk->next = NULL;
+      current_chunk->chunk_name = "tIME";
+      memcpy(&current_chunk->chunk.time.common.length, &common.length, sizeof(common.length));
+      memcpy(current_chunk->chunk.time.common.chunktype, common.chunktype, sizeof(common.chunktype));
+      fread(current_chunk->chunk.time.data, current_chunk->chunk.time.common.length, current_chunk->chunk.time.common.length, fp);
+      fread(&current_chunk->chunk.time.crc, sizeof(current_chunk->chunk.time.crc), 1, fp);
     } else if (strcmp(common.chunktype, "IEND")==0) { // IEND
       memcpy(&fmt->iend.common.length, &common.length, sizeof(common.length));
       memcpy(fmt->iend.common.chunktype, common.chunktype, sizeof(common.chunktype));
@@ -241,8 +310,20 @@ int png_viewer(PPNGFORMAT fmt) {
   printf("    crc:0x%08X\n", fmt->ihdr.crc);
   current_chunk = fmt->chunks->next;
   do {
-    /* printf(", %s\n", current_chunk->chunk_name); */
-    if (strcmp(current_chunk->chunk_name, "gAMA")==0) {
+    /* printf("%s\n", current_chunk->chunk_name); */
+    if (strcmp(current_chunk->chunk_name, "PLTE")==0) {
+      printf("  PLTE\n");
+      printf("    length:0x%X\n", current_chunk->chunk.plte.common.length);
+      printf("    chunktype:");
+      for (i=0; i<sizeof(current_chunk->chunk.plte.common.chunktype); i++) {
+        printf("0x%02X ", current_chunk->chunk.plte.common.chunktype[i]&0x000000FF);
+      }
+      printf("\n");
+      for (i=0; i<current_chunk->chunk.plte.common.length; i+=3) {
+        printf("    pallete %d:%02X %02X %02X\n", i/3, current_chunk->chunk.plte.data[i]&0xFF, current_chunk->chunk.plte.data[i+1]&0xFF, current_chunk->chunk.plte.data[i+2]&0xFF);
+      }
+      printf("    crc:0x%08X\n", swap32(current_chunk->chunk.plte.crc));
+    } else if (strcmp(current_chunk->chunk_name, "gAMA")==0) {
       printf("  gAMA\n");
       printf("    length:0x%X\n", current_chunk->chunk.gama.common.length);
       printf("    chunktype:");
@@ -264,6 +345,26 @@ int png_viewer(PPNGFORMAT fmt) {
         printf("    data:0x%X\n", swap32(current_chunk->chunk.chrm.data[i]));
       }
       printf("    crc:0x%08X\n", swap32(current_chunk->chunk.chrm.crc));
+    } else if (strcmp(current_chunk->chunk_name, "pHYs")==0) {
+      printf("  pHYs\n");
+      printf("    length:0x%X\n", current_chunk->chunk.phys.common.length);
+      printf("    chunktype:");
+      for (i=0; i<sizeof(current_chunk->chunk.phys.common.chunktype); i++) {
+        printf("0x%02X ", current_chunk->chunk.phys.common.chunktype[i]&0x000000FF);
+      }
+      printf("\n");
+      printf("    data:0x");
+      for (i=0; i<4; i++) {
+        printf("%02X", current_chunk->chunk.phys.data[i]);
+      }
+      printf("\n");
+      printf("    data:0x");
+      for (i=0; i<4; i++) {
+        printf("%02X", current_chunk->chunk.phys.data[i]);
+      }
+      printf("\n");
+      printf("    data:0x%X\n", current_chunk->chunk.phys.data[8]);
+      printf("    crc:0x%08X\n", swap32(current_chunk->chunk.phys.crc));
     } else if (strcmp(current_chunk->chunk_name, "bKGD")==0) {
       printf("  bKGD\n");
       printf("    length:0x%X\n", current_chunk->chunk.bkgd.common.length);
@@ -283,17 +384,17 @@ int png_viewer(PPNGFORMAT fmt) {
       for (i=0; i<sizeof(current_chunk->chunk.idat.common.chunktype); i++) {
         printf("0x%02X ", current_chunk->chunk.idat.common.chunktype[i]&0x000000FF);
       }
-      printf("\n");
-      printf("    data:");
-      for (i=0; i<current_chunk->chunk.idat.common.length; i++) {
-        if ((i%32)==0) {
-          printf("\n");
-          printf("<%04X>:  ", i);
-        } else if ((i%4)==0) {
-          printf(" ");
-        }
-        printf("%02X", current_chunk->chunk.idat.data[i]&0xFF);
-      }
+      /* printf("\n"); */
+      /* printf("    data:"); */
+      /* for (i=0; i<current_chunk->chunk.idat.common.length; i++) { */
+      /*   if ((i%32)==0) { */
+      /*     printf("\n"); */
+      /*     printf("<%04X>:  ", i); */
+      /*   } else if ((i%4)==0) { */
+      /*     printf(" "); */
+      /*   } */
+      /*   printf("%02X", current_chunk->chunk.idat.data[i]&0xFF); */
+      /* } */
       printf("\n");
       printf("    crc:0x%08X\n", swap32(current_chunk->chunk.idat.crc));
     }

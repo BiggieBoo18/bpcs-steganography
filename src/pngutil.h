@@ -67,6 +67,30 @@ typedef struct _PNGBKGD {
   int       crc;
 } PNGBKGD, *PPNGBKGD;
 
+typedef struct _PNGSBIT {
+  PNGCOMMON common;
+  char     *data;
+  int       crc;
+} PNGSBIT, *PPNGSBIT;
+
+typedef struct _PNGSPLT {
+  PNGCOMMON common;
+  char     *data;
+  int       crc;
+} PNGSPLT, *PPNGSPLT;
+
+typedef struct _PNGHIST {
+  PNGCOMMON common;
+  char     *data;
+  int       crc;
+} PNGHIST, *PPNGHIST;
+
+typedef struct _PNGPHYS {
+  PNGCOMMON common;
+  char      data[9];
+  int       crc;
+} PNGPHYS, *PPNGPHYS;
+
 typedef struct _PNGIDAT {
   PNGCOMMON common;
   char     *data;
@@ -85,6 +109,12 @@ typedef struct _PNGITXT {
   int       crc;
 } PNGITXT, *PPNGITXT;
 
+typedef struct _PNGTIME {
+  PNGCOMMON common;
+  char      data[7];
+  int       crc;
+} PNGTIME, *PPNGTIME;
+
 typedef struct _PNGIEND {
   PNGCOMMON common;
   int       crc;
@@ -99,9 +129,14 @@ typedef union _U_CHUNKS {
   PNGICCP iccp;
   PNGTEXT text;
   PNGBKGD bkgd;
+  PNGSBIT sbit;
+  PNGSPLT splt;
+  PNGHIST hist;
+  PNGPHYS phys;
   PNGIDAT idat;
   PNGZTXT ztxt;
   PNGITXT itxt;
+  PNGTIME time;
 } U_CHUNKS, *PU_CHUNKS;
 
 typedef struct _CHUNKS {

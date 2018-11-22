@@ -24,6 +24,8 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c
 
 pngtest:
 	./bin/bitplane images/sample.png
+pngtest2:
+	./bin/bitplane images/sample2.png
 
 .PHONY: clean
 clean:
