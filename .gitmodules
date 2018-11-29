@@ -1,0 +1,3 @@
+[submodule "pngparser"]
+	path = pngparser
+	url = git@github.com:BiggieBoo18/pngparser.git

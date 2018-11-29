@@ -18,13 +18,19 @@ int main(int argc, char *argv[]) {
     return(EXIT_FAILURE);
   }
 
+  fmt.nidat        = 0;
   fmt.chunks       = (PCHUNKS)malloc(sizeof(CHUNKS));
   fmt.chunks->next = NULL;
-  if (png_parser(fp, &fmt)) {
+  if (!png_parser(fp, &fmt)) { // png
+    png_viewer(&fmt);
+    if (png_extract_image(&fmt)) {
+      fprintf(stderr, "[!] Failed to extract image!\n");
+      return (EXIT_FAILURE);
+    }
+  } else {
     fprintf(stderr, "[!] Unexpected image format or other errors!\n");
     return(EXIT_FAILURE);
   }
-  png_viewer(&fmt);
 
   fclose(fp);
   return (EXIT_SUCCESS);
