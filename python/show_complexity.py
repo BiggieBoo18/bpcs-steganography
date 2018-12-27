@@ -15,7 +15,7 @@ PATH  = sys.argv[1]
 COLOR = int(sys.argv[2])
 BIT   = int(sys.argv[3])
 
-arr = bp.read_as_numpy(PATH)
+arr = bp.read_image_as_numpy(PATH)
 # arr = bp.pbc_to_cgc(arr)
 arr = bp.to_binary(arr)
 if len(arr.shape)<3:
@@ -28,6 +28,6 @@ cpx      = bp.complexity(bitplane)
 print("image complexity =", cpx)
 
 # block complexity
-for i, block in enumerate(bp.get_block_as_iter(arr, (8,8), COLOR, BIT)):
+for i, block in enumerate(bp.get_block_as_iter(bitplane, (8,8))):
     cpx = bp.complexity(block)
     print("block[{0}] complexity =".format(i), cpx)
