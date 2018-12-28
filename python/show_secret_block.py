@@ -1,6 +1,6 @@
 import sys
-import numpy    as np
-import bitplane as bp
+import numpy as np
+import bpcs  as bp
 
 from PIL import Image
 
@@ -16,7 +16,7 @@ ath       = 0.45 # complexity threshold
 
 arr  = bp.read_message_as_numpy(PATH, blocksize)
 arr  = bp.to_binary(arr)
-for block in bp.get_block_as_iter(arr, blocksize):
+for x, y, block in bp.get_block_as_iter(arr, blocksize):
     cpx = bp.complexity(block)
     print(block)
     print(block.shape)
@@ -24,3 +24,4 @@ for block in bp.get_block_as_iter(arr, blocksize):
     if cpx<ath:
         block = bp.complication(block)
         print("converted complexity =", bp.complexity(block))
+    print("="*30)

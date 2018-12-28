@@ -1,11 +1,11 @@
 import sys
-import numpy    as np
-import bitplane as bp
+import numpy as np
+import bpcs  as bp
 
 from PIL import Image
 
 if len(sys.argv)<4:
-    print("USAGE: {0} <PATH>".format(sys.argv[0]))
+    print("USAGE: {0} <PATH> <COLOR> <BIT>".format(sys.argv[0]))
     print("    PATH:  image path")
     print("    COLOR: RED=0, GREEN=1, BLUE=2")
     print("    BIT  : 0~7 (0:MSB, 7:LSB)")
@@ -28,6 +28,6 @@ cpx      = bp.complexity(bitplane)
 print("image complexity =", cpx)
 
 # block complexity
-for i, block in enumerate(bp.get_block_as_iter(bitplane, (8,8))):
+for i, (x, y, block) in enumerate(bp.get_block_as_iter(bitplane, (8,8))):
     cpx = bp.complexity(block)
     print("block[{0}] complexity =".format(i), cpx)

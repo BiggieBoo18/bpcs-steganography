@@ -1,11 +1,11 @@
 import sys
-import numpy    as np
-import bitplane as bp
+import numpy as np
+import bpcs  as bp
 
 from PIL import Image
 
 if len(sys.argv)<4:
-    print("USAGE: {0} <COLOR> <BIT>".format(sys.argv[0]))
+    print("USAGE: {0} <PATH> <COLOR> <BIT>".format(sys.argv[0]))
     print("    PATH:  image path")
     print("    COLOR: RED=0, GREEN=1, BLUE=2")
     print("    BIT  : 0~7 (0:MSB, 7:LSB)")

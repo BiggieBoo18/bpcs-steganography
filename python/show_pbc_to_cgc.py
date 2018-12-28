@@ -1,6 +1,6 @@
 import sys
-import numpy    as np
-import bitplane as bp
+import numpy as np
+import bpcs  as bp
 
 from PIL import Image
 
