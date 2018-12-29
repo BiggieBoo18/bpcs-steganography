@@ -149,7 +149,7 @@ def conjugation_map(arr, blocksize):
     for i, (x, y, block) in enumerate(get_block_as_iter(arr, blocksize)):
         conj_map.append(block)
     return conj_map
-    
+
 def secret_blocks(arr, blocksize, ath):
     # create secret blocks
     secret_blocks = []
@@ -191,7 +191,7 @@ def encode(arr, secret_blocks, conj_map, blocksize, ath):
                 if arr.shape[2]==1: # gray-scale
                     arr = arr.reshape(arr.shape[:2]+(arr.shape[3],))
                 return arr
-    return arr
+    return None
 
 def decode_block(block):
     decoded = np.packbits(block).tolist()
@@ -230,4 +230,4 @@ def decode(arr, blocksize, ath):
                         decoded += decode_block(block)
                     if shinobi in decoded:
                         return decoded[:decoded.index(shinobi)]
-    return decoded
+    return None
