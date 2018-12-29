@@ -12,7 +12,7 @@ if len(sys.argv)<2:
 PATH  = sys.argv[1]
 
 arr = bp.read_image_as_numpy(PATH)
-if len(arr.shape)<3:
+if len(arr.shape)<2 or len(arr.shape)>3:
     print("Unsupported shape of image")
     exit(1)
 arr = bp.to_binary(arr)

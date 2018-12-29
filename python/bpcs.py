@@ -30,11 +30,13 @@ def read_message_as_numpy(path, blocksize):
 
 def to_binary(arr):
     if len(arr.shape)==3: # 3 channels (R, G, B)
-        arr = np.unpackbits(arr, axis=2) # [[[128,128,128]...]...] => [[[100000001000000010000000]...]...]
-        arr = arr.reshape(arr.shape[:2]+(3, 8, )) # divide each color (h, w, 24) => (h, w, 3, 8)
-        return arr
-    # elif len(arr.shape)==2:
-    #     return np.unpackbits(arr, axis=1)
+        bits = np.unpackbits(arr, axis=2) # [[[128,128,128]...]...] => [[[100000001000000010000000]...]...]
+        bits = bits.reshape(bits.shape[:2]+(arr.shape[2], 8,)) # divide each color (h, w, c*8) => (h, w, c, 8)
+        return bits
+    elif len(arr.shape)==2: # 2 channels gray-scale
+        bits = np.unpackbits(arr, axis=1)
+        bits = bits.reshape(bits.shape[:1]+(arr.shape[1], 8,)) # (h, w*8) => (h, w, 8)
+        return bits
     elif len(arr.shape)==1:
         org = arr.shape             # original shape
         arr = np.unpackbits(arr)
@@ -47,8 +49,12 @@ def to_binary(arr):
 
 def to_image(arr):
     if len(arr.shape)==4: # for 3 channels (R, G, B)
-        arr = arr.reshape(arr.shape[:2]+(arr.shape[2]*arr.shape[3],)) # (h, w, 3, 8) => (h, w, 24)
+        arr = arr.reshape(arr.shape[:2]+(arr.shape[2]*arr.shape[3],)) # (h, w, c, 8) => (h, w, c*8)
         arr = np.packbits(arr, axis=2)
+        return arr
+    elif len(arr.shape)==3: # for 2 channels gray-scale
+        arr = arr.reshape(arr.shape[:1]+(arr.shape[1]*arr.shape[2],)) # (h, w, 8) => (h, w*8)
+        arr = np.packbits(arr, axis=1)
         return arr
     else:
         print("Unsupported shape of image")
@@ -63,8 +69,15 @@ def pbc_to_cgc(arr):
         print("Please first convert to binary. i.e. arr = to_binary(arr)")
         exit(1)
     cgc = arr.copy()
-    for i in range(1, 8):
-        cgc[:,:,:,i] = np.logical_xor(arr[:,:,:,i-1], arr[:,:,:,i]) # gi = bi-1^bi
+    if len(cgc.shape)==4: # RGB
+        for i in range(1, 8):
+            cgc[:,:,:,i] = np.logical_xor(arr[:,:,:,i-1], arr[:,:,:,i]) # gi = bi-1^bi
+    elif len(cgc.shape)==3: # gray-scale
+        for i in range(1, 8):
+            cgc[:,:,i] = np.logical_xor(arr[:,:,i-1], arr[:,:,i]) # gi = bi-1^bi
+    else:
+        print("Unsupported shape of image")
+        exit(1)
     return cgc
 
 def cgc_to_pbc(arr):
@@ -75,12 +88,25 @@ def cgc_to_pbc(arr):
         print("Please first convert to binary. i.e. arr = to_binary(arr)")
         exit(1)
     pbc = arr.copy()
-    for i in range(1, 8):
-        pbc[:,:,:,i] = np.logical_xor(arr[:,:,:,i], pbc[:,:,:,i-1]) # bi = gi^bi-1
+    if len(pbc.shape)==4: # RGB
+        for i in range(1, 8):
+            pbc[:,:,:,i] = np.logical_xor(arr[:,:,:,i], pbc[:,:,:,i-1]) # bi = gi^bi-1
+    elif len(pbc.shape)==3: # gray-scale
+        for i in range(1, 8):
+            pbc[:,:,i] = np.logical_xor(arr[:,:,i], pbc[:,:,i-1]) # bi = gi^bi-1
+    else:
+        print("Unsupported shape of image")
+        exit(1)
     return pbc
 
 def extract_bitplane(arr, color, bit):
-    bitplane = arr[:,:,color,bit] # bitplane shape is (h, w) 2d array
+    if len(arr.shape)==4: # RGB
+        bitplane = arr[:,:,color,bit] # bitplane shape is (h, w) 2d array
+    elif len(arr.shape)==3: # gray-scale
+        bitplane = arr[:,:,bit] # bitplane shape is (h, w) 2d array
+    else:
+        print("Unsupported shape of image")
+        exit(1)
     return bitplane
 
 def get_block_as_iter(bitplane, blocksize):
@@ -139,9 +165,18 @@ def secret_blocks(arr, blocksize, ath):
     return secret_blocks, conj_map
 
 def encode(arr, secret_blocks, conj_map, blocksize, ath):
+    COLOR = 1
+    if len(arr.shape)==4: # RGB
+        COLOR = 3
+    elif len(arr.shape)==3: # gray-scale
+        arr = arr.reshape(arr.shape[:2]+(1, arr.shape[2],))
+        COLOR = 1
+    else:
+        print("Unsupported shape of image")
+        exit(1)
     secret_blocks = secret_blocks[:]
     conj_map      = conj_map[:]
-    for color in range(3):
+    for color in range(COLOR):
         for bit in (7, -1, -1):
             bitplane = extract_bitplane(arr, color, bit)
             for i, (x, y, block) in enumerate(get_block_as_iter(bitplane, blocksize)):
@@ -153,6 +188,8 @@ def encode(arr, secret_blocks, conj_map, blocksize, ath):
                     break
             arr[:,:,color,bit] = bitplane
             if not secret_blocks:
+                if arr.shape[2]==1: # gray-scale
+                    arr = arr.reshape(arr.shape[:2]+(arr.shape[3],))
                 return arr
     return arr
 
@@ -162,12 +199,21 @@ def decode_block(block):
     return decoded
 
 def decode(arr, blocksize, ath):
+    COLOR = 1
+    if len(arr.shape)==4: # RGB
+        COLOR = 3
+    elif len(arr.shape)==3: # gray-scale
+        arr = arr.reshape(arr.shape[:2]+(1, arr.shape[2],))
+        COLOR = 1
+    else:
+        print("Unsupported shape of image")
+        exit(1)
     conj     = True
     conj_map = []
     decoded  = ""
     shinobi  = "".join([chr(c) for c in SHINOBI])
     tail     = "".join([chr(c) for c in TAIL])
-    for color in range(3):
+    for color in range(COLOR):
         for bit in (7, -1, -1):
             bitplane = extract_bitplane(arr, color, bit)
             for x, y, block in get_block_as_iter(bitplane, blocksize):
