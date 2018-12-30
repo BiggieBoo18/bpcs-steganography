@@ -16,11 +16,11 @@ COLOR = int(sys.argv[2])
 BIT   = int(sys.argv[3])
 
 arr = bp.read_image_as_numpy(PATH)
-# arr = bp.pbc_to_cgc(arr)
-arr = bp.to_binary(arr)
 if len(arr.shape)<2 or len(arr.shape)>3:
     print("Unsupported shape of image")
     exit(1)
+# arr = bp.pbc_to_cgc(arr)
+arr = bp.to_binary(arr)
 
 # image complexity
 bitplane = bp.extract_bitplane(arr, COLOR, BIT) # extract bitplane as binary, shape is (h, w)
