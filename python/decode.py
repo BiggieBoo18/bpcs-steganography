@@ -6,8 +6,8 @@ import numpy as np
 import bpcs  as bp
 
 parser = ArgumentParser()
-parser.add_argument("-i", "--image",  type=str, help="encoded image path")
-parser.add_argument("-o", "--output", type=str, help="output text file path")
+parser.add_argument("-i", "--image",  type=str, help="encoded image path", required=True)
+parser.add_argument("-o", "--output", type=str, help="output text file path", required=True)
 args = parser.parse_args()
 
 blocksize = (8,8)
